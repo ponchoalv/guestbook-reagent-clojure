@@ -10,10 +10,10 @@
        {:headers {"Accept" "application/transit+json"}
         :handler #(reset! messages (vec %))}))
 
-(defmulti -ws-handler (fn [{:keys [?data]} _ _ _] 
+(defmulti -ws-handler (fn [{:keys [?data]} & _] 
                         (first ?data)))
 
-(defmethod -ws-handler :default [{:keys [?data]} _ _ _]
+(defmethod -ws-handler :default [{:keys [?data]} & _]
   (println "Handler no utilizado por el cliente: " ?data))
 
 (defmethod -ws-handler :guestbook/error [{:keys [?data]} _ _ errors]
@@ -21,11 +21,12 @@
         response-errors (:errors message)]
     (reset! errors response-errors)))
 
-(defmethod -ws-handler :guestbook/add-message [{:keys [?data]} messages fields errors]
+(defmethod -ws-handler :guestbook/add-message
+  [{:keys [?data]} messages fields errors]
   (let [message (second ?data)]
     (do
       (reset! errors nil)
-      (if (= (:uid message) (:uid @ws/state))
+      (when (= (:uid message) (:uid @ws/state))
         (reset! fields nil))
       (swap! messages conj message))))
 

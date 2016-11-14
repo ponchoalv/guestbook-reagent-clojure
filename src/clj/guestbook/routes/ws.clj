@@ -16,7 +16,8 @@
     :name [[v/required :message "El nombre es obligatorio."]]
     :message [[v/required :message "El mensaje es obligatorio."] 
               [v/min-count 10
-               :message "El mensaje debe ser al menos de 10 caracteres de largo."]])))
+               :message
+               "El mensaje debe ser al menos de 10 caracteres de largo."]])))
 
 (defn save-message! [message]
   (if-let [errors (validate-message message)]
@@ -51,7 +52,7 @@
 (defmethod event :chsk/uidport-close [{:keys [uid]}]
   (println "Disconnected:" uid))
 
-;;(defmethod event :chsk/ws-ping [_])
+(defmethod event :chsk/ws-ping [_])
 
 (defmethod event :guestbook/add-message [{:keys [client-id ?data]}]
   (println "New :guestbook/add-message event dispatched whit data: " ?data)
@@ -61,7 +62,9 @@
     (if (:errors response)
       (chsk-send! client-id [:guestbook/error response])
       (doseq [uid (:any @connected-uids)]
-        (chsk-send! uid [:guestbook/add-message (assoc response :uid client-id)])))))
+        (chsk-send! uid
+                    [:guestbook/add-message
+                     (assoc response :uid client-id)])))))
 
 (defn stop-router! [stop-fn]
   (when stop-fn (stop-fn)))
